@@ -10,6 +10,10 @@ BuildVarsomeVCF <- function(xlsxFile){
     stop("file does not exists")
   }
   panel <- openxlsx::read.xlsx(xlsxFile,sheet=1)
+  selected_variants <- which(!is.na(panel$VARSOME))
+  if(length(selected_variants)<1){
+    stop("candidate variants NOT selected")
+  }
   ## prepare the VCF header
   
   panel$QUAL="."
