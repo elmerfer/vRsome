@@ -7,9 +7,9 @@
 #' 
 BuildVarsomeVCF <- function(xlsxFile){
   if(!file.exists(xlsxFile)){
-    stop("file odes not exists")
+    stop("file does not exists")
   }
-  panel <- openxlsx::read.xlsx(xlsxFile,sheet=3)
+  panel <- openxlsx::read.xlsx(xlsxFile,sheet=1)
   ## prepare the VCF header
   
   panel$QUAL="."
@@ -22,10 +22,11 @@ BuildVarsomeVCF <- function(xlsxFile){
                   paste0(c("#CHROM", "POS", "ID","REF","ALT","QUAL","FILTER","INFO"),collapse = "\t"))
   
   vcf.header <- c(vcf.header,apply(panel[,c("CHROM","POS","RSID","REF","ALT","QUAL","FILTER","INFO")],MARGIN=1, FUN=function(x) paste0(x,collapse = "\t")))
-  writeLines(vcf.header,stringr::str_replace_all(xlsxFile,".xlsx","vRsome.vcf"))
-  if(file.exists(stringr::str_replace_all(xlsxFile,".xlsx","vRsome.vcf"))){
-    cat(paste0("\nSaved as: ",stringr::str_replace_all(xlsxFile,".xlsx","vRsome.vcf")))
+  writeLines(vcf.header,stringr::str_replace_all(xlsxFile,".xlsx","_vRsome.vcf"))
+  if(file.exists(stringr::str_replace_all(xlsxFile,".xlsx","_vRsome.vcf"))){
+    cat(paste0("\nSaved as: ",stringr::str_replace_all(xlsxFile,".xlsx","_vRsome.vcf")))
   }else{
     stop("failed")
   }
 }
+
