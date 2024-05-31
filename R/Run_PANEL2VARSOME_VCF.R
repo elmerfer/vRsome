@@ -1,21 +1,21 @@
-source("~/Dropbox/Fleni/RStudio/libraries/vRsome/R/vRsome.R")
+source("R/vRsome.R")
 pat_path <- "/home/biomolecular/DATA/NGS/Pacientes/"
 
 
-library(rChoiceDialogs)
+
 
 library(stringr)
-select <- rstudioapi::selectDirectory(
+select <- rstudioapi::selectFile(
   caption = "Select Directory",
-  label = "Select",
-  path = "/home/biomolecular/DATA/NGS/RNAseq/Pacientes"
+  filter = "Excel Files (*.xlsx)",
+  path = pat_path
 )
 
 if(length(select)>0){
-  if(stringr::str_detect(select,".xlsx")){
+  if(stringr::str_detect(select,".xlsx")==FALSE){
     stop("CUIDADO: DEBE SER UN ARCHIVO xlsx")
   }
-  BuildVarsomeVCF(openxlsx::read.xlsx(select))
+  BuildVarsomeVCF(select)
 
 }else{
   cat("Not selected")
