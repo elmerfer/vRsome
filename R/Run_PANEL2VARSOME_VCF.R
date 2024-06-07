@@ -1,5 +1,11 @@
+rm(list = ls())
 source("R/vRsome.R")
-pat_path <- "/home/biomolecular/DATA/NGS/Pacientes/"
+if(Sys.info()["nodename"] == "elmer-pc"){
+  pat_path <- "/home/elmer/Elmer/FLENI/EXOMAS/"
+}else{
+  pat_path <- "/home/biomolecular/DATA/NGS/Pacientes/"  
+}
+
 
 
 
@@ -15,7 +21,8 @@ if(length(select)>0){
   if(stringr::str_detect(select,".xlsx")==FALSE){
     stop("CUIDADO: DEBE SER UN ARCHIVO xlsx")
   }
-  BuildVarsomeVCF(select)
+  # BuildVarsomeVCF(select)
+  BuildVarsomeVCF_FULL(select)
 
 }else{
   cat("Not selected")
