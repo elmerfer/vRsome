@@ -136,16 +136,16 @@ CheckGeneOnPanels <- function(xlsx.file, verbose =TRUE){
       panel$Atencion.Cobertura[!estas] <- "REVISAR"
       panel$Atencion.VCF[!estas_en_snpEFF] <- "REVISAR"
       panel$GeneSymbol[!estas_en_snpEFF]
-     
+      if(verbose==TRUE){
+        cat("\n---------------------------------------------\n")
+        cat(paste0("The Panel is : ", basename(xlsx.file),"\n"))
+        cat("\n---------------------------------------------\n")
+        print(panel[!estas_en_snpEFF | !estas_en_snpEFF ,c("GeneSymbol","Atencion.Cobertura","Atencion.VCF")])
+        cat("\n---------------------------------------------\n")      
+      }
+      invisible(return(panel[!estas_en_snpEFF | !estas_en_snpEFF ,c("GeneSymbol","Atencion.Cobertura","Atencion.VCF")])) 
     }
-    if(verbose==TRUE){
-      cat("\n---------------------------------------------\n")
-      cat(paste0("The Panel is : ", basename(xlsx.file),"\n"))
-      cat("\n---------------------------------------------\n")
-      print(panel[!estas_en_snpEFF | !estas_en_snpEFF ,c("GeneSymbol","Atencion.Cobertura","Atencion.VCF")])
-      cat("\n---------------------------------------------\n")      
-    }
-     invisible(return(panel[!estas_en_snpEFF | !estas_en_snpEFF ,c("GeneSymbol","Atencion.Cobertura","Atencion.VCF")]))
+    
   }  
   return(invisible(NA))
   
