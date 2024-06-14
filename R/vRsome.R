@@ -98,6 +98,55 @@ BuildVarsomeVCF_FULL <- function(xlsxFile){
   file_to_save <- stringr::str_replace_all(xlsxFile,".xlsx","_vRsome_FULL.vcf.gz")
   write.vcf(x= vcf2save, file =file_to_save)
   gunzip(file_to_save)
-  
+
+}
+
+
+vcf_header <- function(vcf_file){
+  header_vcf <- data.table::fread(cmd= paste("grep", "\\##", vcf_file),
+                                  sep="",sep2="",header=F,data.table=F)[,,drop=T]
+}
+
+#' CheckGeneOnPanels
+#' Check that the gene in the panel are present in the hg19 and snpEFF reference gene list and database respectively
+#' @param xlsx.file file path to the exel file containing the gene panel
+#' @return a data frame with those genes to be revisited (not found in the databses )
+CheckGeneOnPanels <- function(xlsx.file, verbose =TRUE){
+  if(!is.null(xlsx.file)){
+    hg19_genes <- readRDS("Data/hg19_genes.RDS")
+    hg19_snpEFF_genes <- readRDS("Data/hg19_snpEFF_genes.RDS")
+    
+    wb <- openxlsx::loadWorkbook(xlsxFile = xlsx.file)
+    panel <- openxlsx::readWorkbook(wb,skipEmptyRows = FALSE,
+                                    skipEmptyCols = FALSE,detectDates=TRUE)
+    if(all(c("Atencion.Cobertura","Atencion.VCF") %in% colnames(panel))==TRUE){
+      n_cols<-which(colnames(panel)  %in% c("Atencion.Cobertura","Atencion.VCF"))
+    }else{
+      n_cols <- c(1:2)+ncol(panel)
+    }
+    
+    estas<-panel$GeneSymbol %in% hg19_genes$GeneName
+    estas_en_snpEFF <- panel$GeneSymbol %in% hg19_snpEFF_genes$geneName
+    
+    if(all(c(estas,estas_en_snpEFF))){
+      cat("Todos los genes del panel han sido encontrados tanto en hg19 como en la base de datos de snpEFF")
+    }else{
+      panel$Atencion.Cobertura <- NA
+      panel$Atencion.VCF <-NA
+      panel$Atencion.Cobertura[!estas] <- "REVISAR"
+      panel$Atencion.VCF[!estas_en_snpEFF] <- "REVISAR"
+      panel$GeneSymbol[!estas_en_snpEFF]
+     
+    }
+    if(verbose==TRUE){
+      cat("\n---------------------------------------------\n")
+      cat(paste0("The Panel is : ", basename(xlsx.file),"\n"))
+      cat("\n---------------------------------------------\n")
+      print(panel[!estas_en_snpEFF | !estas_en_snpEFF ,c("GeneSymbol","Atencion.Cobertura","Atencion.VCF")])
+      cat("\n---------------------------------------------\n")      
+    }
+     invisible(return(panel[!estas_en_snpEFF | !estas_en_snpEFF ,c("GeneSymbol","Atencion.Cobertura","Atencion.VCF")]))
+  }  
+  return(invisible(NA))
   
 }
