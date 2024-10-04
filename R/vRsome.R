@@ -44,6 +44,7 @@ BuildVarsomeVCF <- function(xlsxFile){
 #' @export
 #' 
 BuildVarsomeVCF_FULL <- function(xlsxFile){
+  require(vcfR)
   if(!file.exists(xlsxFile)){
     stop("file does not exists")
   }
@@ -52,10 +53,15 @@ BuildVarsomeVCF_FULL <- function(xlsxFile){
   if(length(selected_variants)<1){
     stop("candidate variants NOT selected")
   }
+  cat("Selected Variants\n")
+  cat(paste0(panel$GENE_NAME[selected_variants], collapse = "\n"))
   if(!any(stringr::str_detect(colnames(panel),"GENE_NAME")==TRUE)){
     stop("The Excel file PANEL should contain a columna with the gene symbola named GENE_NAME")
   }
-  genes <- unique(panel$GENE_NAME[selected_variants])
+  panel <- panel[selected_variants,,drop=F]
+  cat("Selected Variants Check\n")
+  cat(paste0(unique(panel$GENE_NAME), collapse = "\n"))
+  genes <- unique(panel$GENE_NAME)
   
   vcf_file <- list.files(dirname(xlsxFile), pattern = "final.vcf", full.names = T)
   patient_ID <- unlist(stringr::str_split(basename(xlsxFile),"_MODApy"))[1]
@@ -81,14 +87,27 @@ BuildVarsomeVCF_FULL <- function(xlsxFile){
   ##busco los genes seleccionados del panel
   
   variants_DT <- plyr::ldply(genes, function(gen){
+    print(gen)
     var <- data.table::fread(cmd=paste("grep","-e",gen, vcf_file))
   })
   colnames(variants_DT) <- colnames(vcf_col_names)
   
   ## busco solo las variantes seleccionadas basandome en la HGSV.C que siempre deberia estar
-  vDT<- plyr::ldply(panel$HGVS.C[selected_variants],function(hgvs.c){
-    variants_DT[stringr::str_detect(variants_DT$INFO,hgvs.c),]
+  croms <- unique(panel$CHROM)
+  vDT<- plyr::ldply(panel$HGVS.C,function(hgvs.c){
+    variants_DT[stringr::str_detect(variants_DT$INFO,escapar_caracteres(hgvs.c)),]
   })
+  colnames(variants_DT) <- stringr::str_remove_all(colnames(variants_DT),"#")
+  
+  # vDT<- plyr::ldply(croms, function(chr){
+  #   chr <- croms[1]
+  #   vd <- subset(variants_DT, CHROM==chr)
+  #   subpanel <- subset(panel,CHROM==chr)
+  #   plyr::ldply(subpanel$HGVS.C, function(hgvs.c){
+  #     vd[stringr::str_detect(vd$INFO,hgvs.c),]  
+  #   })
+  # })
+  
   
   if(nrow(vDT)==length(selected_variants)){
     print("EXITO")
@@ -97,7 +116,7 @@ BuildVarsomeVCF_FULL <- function(xlsxFile){
   vcf2save <- new("vcfR", meta = header_vcf, fix = as.matrix(vDT[,-c(ncol(vDT)-1,ncol(vDT))]), gt = as.matrix(vDT[,c(ncol(vDT)-1,ncol(vDT))]))
   file_to_save <- stringr::str_replace_all(xlsxFile,".xlsx","_vRsome_FULL.vcf.gz")
   write.vcf(x= vcf2save, file =file_to_save)
-  gunzip(file_to_save)
+  R.utils::gunzip(file_to_save,overwrite=TRUE)
 
 }
 
@@ -149,4 +168,17 @@ CheckGeneOnPanels <- function(xlsx.file, verbose =TRUE){
   }  
   return(invisible(NA))
   
+}
+
+
+escapar_caracteres <- function(texto) {
+  # Lista de caracteres especiales en expresiones regulares
+  caracteres_especiales <- c("\\", ".", "+", "*", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|")
+  
+  # Reemplazar cada carácter especial con su versión escapada
+  for (caracter in caracteres_especiales) {
+    texto <- gsub(paste0("\\", caracter), paste0("\\\\", caracter), texto)
+  }
+  
+  return(texto)
 }
