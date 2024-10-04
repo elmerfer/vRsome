@@ -1,0 +1,65 @@
+---
+title: 'Reporte Fleni '
+output:
+  pdf_document: default
+  word_document: default
+date: "2024-10-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## ANÁLISIS		
+### Tipo de estudio
+    • Panel Neurooncológico (ver listado de genes en el anexo)
+
+### Metodología
+
+Se realizó el armado de bibliotecas utilizando el kit captura exómica Twist Human Core Exome. La secuenciación se realizó con un Novaseq (Illumina). Los programas utilizados para el procesamiento bioinformático se detallan en el anexo. Se realizó un panel virtual con el listado de genes solicitados.
+Cobertura promedio ( ≥10X): 98,8%
+Profundidad de secuenciación promedio del panel: 184,4X
+
+La clasificación de variantes se realizó siguiendo las guias de la Association for Molecular Pathology (AMP), American Society of Clinical Oncology (ASCO) y College of American Pathologists (CAP) (PMID: 27993330) y las recomendaciones para variantes somáticas de Clinical Genome Resource (ClinGen), Cancer Genomics Consortium (CGC) y Variant Interpretation for Cancer Consortium (VICC) (PMID: 36063163).
+
+Se informarán las variantes consideradas oncogénicas/posiblemente oncogénicas con evidencia terapéutica, pronóstica y diagnóstica de tener un significado clínico fuerte (Tier 1),  un potencial significado clínico (Tier 2) según el tipo de cáncer y variantes con significado clínico incierto (Tier 3). No se informarán variantes benignas/posiblemente benignas y sin evidencia de su asociación con cáncer (Tier 4). 
+La clasificación se determinó teniendo en cuenta los siguientes datos de la muestra:
+Tejido: Cerebro / SNC
+Tipo de cáncer: Tumor glial
+
+
+
+
+
+## RESULTADOS
+
+Resultado del análisis de secuencia
+
+```{r cars, echo=FALSE}
+library(data.table)
+tabla_reporte <- data.table(openxlsx::read.xlsx("/home/efernandez/BM23-48847_Alzheimer-exported-variants.xlsx"))
+tabla_reporte[, HGVS:= stringr::str_replace_all(HGVS," ",":") ]
+tabla_reporte[, HGVS:= stringr::str_replace_all(HGVS,"&gt;",">") ]
+tabla_reporte[, HGVS:= stringr::str_remove_all(HGVS,"\\)|\\(") ]
+tabla_reporte[, c("NM", "Var","Prot") := tstrsplit(HGVS, ":", fixed=TRUE)]
+
+d2t <- data.frame(GEN = tabla_reporte$Genes,
+                  VARIANTE = tabla_reporte$Var,
+                  NM = tabla_reporte$NM,
+                  "PREDICCION PROTEICA"= tabla_reporte$Prot,
+                  CIGOSIDAD = toupper(stringr::str_sub(tabla_reporte$Zygosity,end=3)),
+                  "FRECUENCIA ALELICA" = tabla_reporte$Frequency,
+                  ACMG = tabla_reporte$Germline.Class)
+knitr::kable(d2t)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
